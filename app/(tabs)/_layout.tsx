@@ -34,9 +34,9 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="tip_splitter"
+        name="BillSplitter"
         options={{
-          title: 'Tip Splitter',
+          title: 'Bill Splitter',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
         }}
       />
