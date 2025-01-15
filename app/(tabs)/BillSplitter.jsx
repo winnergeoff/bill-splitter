@@ -1,4 +1,4 @@
-import { StyleSheet, View, Text, ScrollView, Button } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, Button, FlatList } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import {
   SafeAreaView,
@@ -14,6 +14,7 @@ import * as ImagePicker from 'expo-image-picker';
 export default function TabTwoScreen() {
   const [scannedImage, setScannedImage] = useState();
   const [imageText, setImageText] = useState();
+  const [imageBlocks, setImageBlocks ] = useState([]);
 
   const scanDocument = async () => {
     // start the document scanner
@@ -21,7 +22,6 @@ export default function TabTwoScreen() {
   
     // get back an array with scanned image file paths
     if (scannedImages.length > 0) {
-      console.log(scannedImages[0]);
       // set the img src, so we can view the first scanned image
       setScannedImage(scannedImages[0]);
       extractText(scannedImages[0]);
@@ -41,19 +41,19 @@ export default function TabTwoScreen() {
       width: asset.width,
       height: asset.height,
     };
-    console.log(imageResult);
-    console.log(asset);
-    console.log(currentImage);
-    setScannedImage(currentImage);
+    setScannedImage(currentImage.path);
     extractText(currentImage.path);
   };
-
 
   const extractText = async (image) => {
     try {
       const result = await TextRecognition.recognize(image);
       setImageText(result.text);
-      console.log(result.text);
+      let newBlocks = [];
+      newBlocks = result.blocks.map((block, blockId) => {
+        return newBlocks = {text: block.text, id: blockId};
+      })
+      setImageBlocks(newBlocks);
     } catch (error) {
       console.log(error);
     }
@@ -61,41 +61,60 @@ export default function TabTwoScreen() {
 
   const takePhotoButton = () => {
     scanDocument();
-  }
+  };
+
+  const useSavedPhoto = () => {
+    pickImage();
+  };
+
+  useEffect(() => console.log(imageBlocks));
 
   return (
-    <SafeAreaProvider>
+    <SafeAreaProvider style={styles.outerContainer}>
       <SafeAreaView style={styles.container}>
-        <ScrollView style={styles.scrollView}>
-          <View style={styles.container}>
-            <Text style={styles.title}>Bill Splitter</Text>
-            <Text style={styles.subTitle}>
-              If your friends don't know how to read
-              a receipt then just scan your receipt and it will create line items each person
-              can claim.
-            </Text>
-            <Text style={styles.subTitle}>{imageText}</Text>
+        <View style={styles.container}>
+          <Text style={styles.title}>Bill Splitter</Text>
+          <Text style={styles.subTitle}>
+            If your friends don't know how to read
+            a receipt then just scan your receipt and it will create line items each person
+            can claim.
+          </Text>
+          {/* <Text style={styles.subTitle}>{imageText}</Text> */}
+          
+          <FlatList
+            data={imageBlocks}
+            renderItem={(item) => (<Text style={styles.subTitle}>{item.id}</Text>)}
+            keyExtractor={item => item.id}
+            style={styles.flatList}
+          />
 
-            <View style={styles.buttonContainer}>
-              <Button onPress={scanDocument} title="Take Photo" color="#841584" />
-            </View>
-
-            <Image
-              resizeMode="contain"
-              style={{ width: '100%', height: '100%' }}
-              source={{ uri: scannedImage }}
-            />
+          <View style={styles.buttonContainer}>
+            <Button onPress={takePhotoButton} title="Scan with your camera" color="#03bafc" />
           </View>
-        </ScrollView>
+
+          <View style={styles.buttonContainer}>
+            <Button onPress={useSavedPhoto} title="Use a saved photo" color="#03bafc" />
+          </View>
+          
+          <Image
+            // resizeMode="contain"
+            // style={{ width: '100%', height: '100%' }}
+            source={{ uri: scannedImage }}
+          />
+        </View>
       </SafeAreaView>
     </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
+  outerContainer: {
+    backgroundColor: 'white',
+  },
   container: {
     flex: 1,
-    // backgroundColor: 'blue',
+    padding: 20,
+    backgroundColor: 'white',
   },
   title: {
     textAlign: 'center',
@@ -106,10 +125,20 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 20,
   },
-  scrollView: {
-    backgroundColor: 'pink',
-  },
   buttonContainer: {
     margin: 20,
+    backgroundColor: 'blue',
+    text: 'white'
   },
+  item: {
+    backgroundColor: '#f9c2ff',
+    padding: 20,
+    marginVertical: 8,
+    marginHorizontal: 16,
+  },
+  flatList: {
+    flex: 1,
+    borderColor: 'red',
+    borderWidth: 1,
+  }
 });
